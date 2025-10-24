@@ -1,0 +1,8 @@
+# MT con símbolo blanco en alfabeto de entrada (ERROR)
+q0 q1
+0 1 .
+0 1 .
+q0
+.
+q1
+q0 0 q1 1 R

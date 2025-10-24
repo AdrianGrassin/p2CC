@@ -1,0 +1,8 @@
+# MT con error: estado inicial no existe
+q1 q2
+0 1
+0 1 .
+q99
+.
+q2
+q1 0 q2 1 R
