@@ -14,7 +14,6 @@ Simulador de Máquinas de Turing implementado en C++17 que permite:
 - ✅ Soporte para máquinas monocinta y multicinta
 - ✅ Validación automática de la definición formal
 - ✅ Ejecución paso a paso con visualización de la traza
-- ✅ Detección de errores en tiempo de carga
 - ✅ Ejercicios propuestos implementados
 Implementa la definición formal: **M = (Q, Σ, Γ, δ, q₀, F)** para monocinta y **M = (Q, Σ, Γ, δ, q₀, F, k)** para multicinta.
 
