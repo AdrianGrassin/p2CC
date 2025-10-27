@@ -5,17 +5,21 @@
  * Constructor de TuringMachine
  */
 TuringMachine::TuringMachine()
-    : initialState(State()), currentState(State()), tape(nullptr), stepCount(0), 
-      isAccepted(false), hasHalted(false) {
+    : initialState(State()), currentState(State()), numberOfTapes(1),
+      stepCount(0), isAccepted(false), hasHalted(false) {
+    tapes.resize(1, nullptr);
 }
 
 /**
  * Destructor
  */
 TuringMachine::~TuringMachine() {
-    if (tape != nullptr) {
-        delete tape;
+    for (auto tape : tapes) {
+        if (tape != nullptr) {
+            delete tape;
+        }
     }
+    tapes.clear();
 }
 
 // Métodos para construir la MT
@@ -50,9 +54,29 @@ void TuringMachine::addAcceptanceState(const State& state) {
 }
 
 void TuringMachine::addTransition(const Transition& transition) {
+    // Para multicinta, crear clave con todos los símbolos separados por |
+    std::string symbolKey;
+    const auto& readSymbols = transition.getReadSymbols();
+    for (size_t i = 0; i < readSymbols.size(); i++) {
+        symbolKey += readSymbols[i];
+        if (i < readSymbols.size() - 1) symbolKey += "|";
+    }
+    
     std::pair<std::string, std::string> key = 
-        {transition.getCurrentState().getName(), transition.getReadSymbol()};
+        {transition.getCurrentState().getName(), symbolKey};
     transitions[key] = transition;
+}
+
+void TuringMachine::setNumberOfTapes(int n) {
+    numberOfTapes = (n < 1) ? 1 : n;
+    // Limpiar cintas antiguas si existen
+    for (auto tape : tapes) {
+        if (tape != nullptr) {
+            delete tape;
+        }
+    }
+    tapes.clear();
+    tapes.resize(numberOfTapes, nullptr);
 }
 
 // Métodos de ejecución
@@ -62,10 +86,24 @@ void TuringMachine::initialize(const std::string& input) {
     isAccepted = false;
     hasHalted = false;
     
-    if (tape != nullptr) {
-        delete tape;
+    // Limpiar cintas antiguas
+    for (auto tape : tapes) {
+        if (tape != nullptr) {
+            delete tape;
+        }
     }
-    tape = new Tape(input, tapeAlphabet.getBlankSymbol(), &tapeAlphabet);
+    
+    std::string blank = tapeAlphabet.getBlankSymbol();
+    // Crear cintas
+    for (int i = 0; i < numberOfTapes; i++) {
+        if (i == 0) {
+            // La primera cinta contiene la entrada
+            tapes[i] = new Tape(input, blank, &tapeAlphabet);
+        } else {
+            // Las demás cintas empiezan vacías
+            tapes[i] = new Tape("", blank, &tapeAlphabet);
+        }
+    }
 }
 
 bool TuringMachine::executeStep() {
@@ -104,10 +142,13 @@ void TuringMachine::reset() {
     stepCount = 0;
     isAccepted = false;
     hasHalted = false;
-    if (tape != nullptr) {
-        delete tape;
-        tape = nullptr;
+    for (auto tape : tapes) {
+        if (tape != nullptr) {
+            delete tape;
+        }
     }
+    tapes.clear();
+    tapes.resize(numberOfTapes, nullptr);
 }
 
 // Métodos de consulta
@@ -143,6 +184,14 @@ int TuringMachine::getStepCount() const {
     return stepCount;
 }
 
+int TuringMachine::getNumberOfTapes() const {
+    return numberOfTapes;
+}
+
+bool TuringMachine::isMultiTape() const {
+    return numberOfTapes > 1;
+}
+
 bool TuringMachine::isHalted() const {
     return hasHalted;
 }
@@ -152,15 +201,23 @@ bool TuringMachine::wasAccepted() const {
 }
 
 std::string TuringMachine::getTapeContent() const {
-    if (tape != nullptr) {
-        return tape->getVisibleContent();
+    return getTapeContent(0);
+}
+
+std::string TuringMachine::getTapeContent(int tapeIndex) const {
+    if (tapeIndex >= 0 && tapeIndex < numberOfTapes && tapes[tapeIndex] != nullptr) {
+        return tapes[tapeIndex]->getVisibleContent();
     }
     return "";
 }
 
 int TuringMachine::getHeadPosition() const {
-    if (tape != nullptr) {
-        return tape->getHeadPosition();
+    return getHeadPosition(0);
+}
+
+int TuringMachine::getHeadPosition(int tapeIndex) const {
+    if (tapeIndex >= 0 && tapeIndex < numberOfTapes && tapes[tapeIndex] != nullptr) {
+        return tapes[tapeIndex]->getHeadPosition();
     }
     return -1;
 }
@@ -187,15 +244,26 @@ bool TuringMachine::hasState(const std::string& stateName) const {
 // Método para obtener información
 std::string TuringMachine::getConfiguration() const {
     std::string config = "Estado: " + currentState.getName();
-    if (tape != nullptr) {
-        config += ", Cinta: [" + tape->getVisibleContent() + "], Cabezal: " + 
-                 std::to_string(tape->getHeadPosition());
+    if (isMultiTape()) {
+        config += "\n";
+        for (int i = 0; i < numberOfTapes; i++) {
+            config += "Cinta " + std::to_string(i + 1) + ": [" + getTapeContent(i) + "], " +
+                     "Cabezal: " + std::to_string(getHeadPosition(i));
+            if (i < numberOfTapes - 1) config += "\n";
+        }
+    } else {
+        config += ", Cinta: [" + getTapeContent() + "], Cabezal: " + 
+                 std::to_string(getHeadPosition());
     }
     return config;
 }
 
 std::string TuringMachine::toString() const {
-    std::string result = "=== Máquina de Turing ===\n";
+    std::string result = "=== Máquina de Turing";
+    if (isMultiTape()) {
+        result += " (" + std::to_string(numberOfTapes) + " cintas)";
+    }
+    result += " ===\n";
     result += "Estados: " + std::to_string(states.size()) + "\n";
     result += "Alfabeto entrada: " + inputAlphabet.toString() + "\n";
     result += "Alfabeto cinta: " + tapeAlphabet.toString() + "\n";
@@ -217,8 +285,14 @@ std::string TuringMachine::toString() const {
 
 // Método privado
 bool TuringMachine::applyTransition() {
-    std::string readSymbol = tape->read();
-    std::pair<std::string, std::string> key = {currentState.getName(), readSymbol};
+    // Leer símbolos de todas las cintas
+    std::string symbolKey;
+    for (int i = 0; i < numberOfTapes; i++) {
+        symbolKey += tapes[i]->read();
+        if (i < numberOfTapes - 1) symbolKey += "|";
+    }
+    
+    std::pair<std::string, std::string> key = {currentState.getName(), symbolKey};
     
     // Buscar transición
     auto it = transitions.find(key);
@@ -230,14 +304,23 @@ bool TuringMachine::applyTransition() {
     
     // Aplicar transición
     const Transition& trans = it->second;
-    tape->write(trans.getWriteSymbol());
-    currentState = trans.getNextState();
+    const auto& writeSymbols = trans.getWriteSymbols();
+    const auto& directions = trans.getDirections();
     
-    if (trans.getDirection() == 'R') {
-        tape->moveRight();
-    } else if (trans.getDirection() == 'L') {
-        tape->moveLeft();
+    // Escribir y mover en cada cinta
+    for (int i = 0; i < numberOfTapes; i++) {
+        tapes[i]->write(writeSymbols[i]);
+        
+        char dir = directions[i];
+        if (dir == 'R') {
+            tapes[i]->moveRight();
+        } else if (dir == 'L') {
+            tapes[i]->moveLeft();
+        }
+        // Si dir == 'S', el cabezal no se mueve
     }
+    
+    currentState = trans.getNextState();
     
     return true;
 }

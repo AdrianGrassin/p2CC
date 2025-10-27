@@ -21,13 +21,14 @@ private:
     Alphabet tapeAlphabet;                     // Γ (alfabeto de cinta)
     State initialState;                        // q0
     std::set<State> acceptanceStates;          // F (conjunto de estados de aceptación)
+    int numberOfTapes;                         // Número de cintas (1 para monocinta)
     
-    // Función de transición: mapa de (estado, símbolo) -> Transition
+    // Función de transición: mapa de (estado, símbolo(s)) -> Transition
     std::map<std::pair<std::string, std::string>, Transition> transitions;
     
     // Estado de ejecución
     State currentState;
-    Tape* tape;
+    std::vector<Tape*> tapes;                  // Cintas (1 o más)
     int stepCount;
     bool isAccepted;
     bool hasHalted;
@@ -51,6 +52,7 @@ public:
     void setBlankSymbol(const std::string& symbol);
     void addAcceptanceState(const State& state);
     void addTransition(const Transition& transition);
+    void setNumberOfTapes(int n);  // Nuevo: establecer número de cintas
 
     // Métodos de ejecución
     void initialize(const std::string& input);
@@ -67,10 +69,14 @@ public:
     const std::set<State>& getAcceptanceStates() const;
     const std::map<std::pair<std::string, std::string>, Transition>& getTransitions() const;
     int getStepCount() const;
+    int getNumberOfTapes() const;  // Nuevo
+    bool isMultiTape() const;      // Nuevo
     bool isHalted() const;
     bool wasAccepted() const;
     std::string getTapeContent() const;
+    std::string getTapeContent(int tapeIndex) const;  // Nuevo: obtener cinta específica
     int getHeadPosition() const;
+    int getHeadPosition(int tapeIndex) const;  // Nuevo: posición de cabezal específico
 
     // Métodos de validación
     bool isValidInput(const std::string& input) const;

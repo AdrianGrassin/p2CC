@@ -125,7 +125,16 @@ void MTSimulator::printResult() const {
     std::cout << "\n=== Resultado ===" << std::endl;
     std::cout << "Pasos totales: " << machine->getStepCount() << std::endl;
     std::cout << "Resultado: " << (machine->wasAccepted() ? "ACEPTA" : "RECHAZA") << std::endl;
-    std::cout << "Cinta final: [" << machine->getTapeContent() << "]" << std::endl;
+    
+    if (machine->isMultiTape()) {
+        std::cout << "Cintas finales:" << std::endl;
+        for (int i = 0; i < machine->getNumberOfTapes(); i++) {
+            std::cout << "  Cinta " << (i + 1) << ": [" << machine->getTapeContent(i) << "]" << std::endl;
+        }
+    } else {
+        std::cout << "Cinta final: [" << machine->getTapeContent() << "]" << std::endl;
+    }
+    
     std::cout << "Estado final: " << machine->getCurrentState().getName() << std::endl;
 }
 

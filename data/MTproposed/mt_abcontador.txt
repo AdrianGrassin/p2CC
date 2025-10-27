@@ -1,0 +1,68 @@
+# Máquina de Turing de 2 cintas: Segundo ejercicio propuesto
+# Usa la cinta 1 para leer, cinta 2 como contador, luego copia de la cinta 2 a la cinta 1
+# Este problema requiere memoria adicional, ideal para multicinta
+
+# Estados
+q0 q1 q2 q3 q4 q5 q6 q7 qacc
+
+# Alfabeto de entrada
+a b 
+
+# Alfabeto de cinta
+a b 1 .
+
+# Estado inicial
+q0
+
+# Símbolo blanco
+.
+
+# Estados de aceptación
+qacc
+
+# Número de cintas
+2
+
+# Transiciones ( Se basa en recorrer las a's de derecha a izquierda contandolas  
+# una vez se está a la izquierda del todo se cuentan las b)
+
+# iniciamos el 1 para las a
+q0 a . q0 a 1 S S
+q0 b . q0 b 1 S S
+q0 a 1 q1 a 1 S R
+q0 b 1 q1 b 1 S R
+
+# bucle de recuento de a
+q1 a . q1 a 1 R R
+q1 b . q1 b . R S
+q1 . . q2 . . S R
+
+
+# Iniciamos el 1 para las b
+q2 . . q3 . 1 L R
+
+q3 a . q3 a . L S
+q3 b . q3 b 1 L R
+q3 . . q4 . . S L
+
+q4 . 1 q4 . 1 S L
+q4 . . q5 . . S L
+
+q5 . 1 q5 . 1 S L
+q5 . . q6 . . R R
+
+# copiar 1(a)
+q6 a 1 q6 1 1 R R
+q6 b 1 q6 1 1 R R
+q6 a . q7 . . R R
+q6 b . q7 . . R R
+q6 . 1 q6 1 1 R R
+q6 . . q7 . . R R
+
+# copiar 1(b)
+q7 a 1 q7 1 1 R R
+q7 b 1 q7 1 1 R R
+q7 . 1 q7 1 1 R R
+q7 . . qacc . . S S
+
+

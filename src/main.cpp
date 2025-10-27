@@ -1,29 +1,32 @@
 #include <iostream>
 #include <string>
-#include <vector> // Necesitamos incluir <vector>
+#include <vector>
 #include "../include/MTSimulator.h"
 #include "../include/MTException.h"
 
 /**
  * Programa principal del simulador de Máquinas de Turing
+ * Soporta tanto máquinas monocinta como multicinta automáticamente
  */
 int main(int argc, char* argv[]) {
     try {
-        if (argc < 3) { // Ahora requerimos al menos 3 argumentos: ejecutable, archivo MT, y una entrada
-            std::cerr << "Uso: " << argv[0] << " <archivo_MT> <entrada1> [entrada2] ... [-h]" << std::endl;
-            std::cerr << "  -h: Muestra la traza completa de ejecución (para todas las entradas)" << std::endl;
-            std::cerr << "Ejemplo: " << argv[0] << " data/Ejemplo_MT.txt \"0101\" \"11\"" << std::endl;
+        if (argc < 3) {
+            std::cerr << "Uso: " << argv[0] << " <archivo_MT> <entrada1> [entrada2] ... [-t]" << std::endl;
+            std::cerr << "  -t: Muestra la traza completa de ejecución (para todas las entradas)" << std::endl;
+            std::cerr << "Ejemplos:" << std::endl;
+            std::cerr << "  " << argv[0] << " data/Ejemplo_MT.txt \"0101\" \"11\"" << std::endl;
+            std::cerr << "  " << argv[0] << " data/MTproposed/mt_copiar.txt \"101\" -t" << std::endl;
             return 1;
         }
 
         std::string mtFile = argv[1];
-        std::vector<std::string> inputs; // Usamos un vector para almacenar las entradas
+        std::vector<std::string> inputs;
         bool showFullTrace = false;
 
         // Procesar argumentos
         for (int i = 2; i < argc; i++) {
             std::string arg = argv[i];
-            if (arg == "-h") {
+            if (arg == "-t") {
                 showFullTrace = true;
             } else {
                 // Si no es un flag, es una cadena de entrada
@@ -33,7 +36,7 @@ int main(int argc, char* argv[]) {
 
         MTSimulator simulator;
 
-        // Cargar la máquina de Turing 
+        // Cargar la máquina de Turing (detecta automáticamente mono/multicinta)
         if (!simulator.loadMachine(mtFile)) {
             std::cerr << "Error: No se pudo cargar la máquina de Turing desde: " << mtFile << std::endl;
             return 1;
@@ -58,10 +61,8 @@ int main(int argc, char* argv[]) {
                 simulator.printResult();
                 std::cout << "=================================================\n" << std::endl;
             }
-
         } else {
             std::cout << "No se proporcionó ninguna cadena de entrada." << std::endl;
-            std::cerr << "Uso: " << argv[0] << " <archivo_MT> <entrada1> [entrada2] ... [-h]" << std::endl;
         }
 
         return 0;

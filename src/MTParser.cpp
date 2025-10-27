@@ -86,21 +86,100 @@ TuringMachine* MTParser::parseFile(const std::string& filename) {
         }
     }
 
-    // Líneas 7+: Transiciones
+    // Línea 7: Número de cintas (OPCIONAL - si no está, es monocinta)
+    int numberOfTapes = 1;  // Por defecto monocinta
+    if (getNextValidLine(line)) {
+        auto tokens = tokenize(line);
+        if (!tokens.empty()) {
+            // Intentar parsear como número
+            try {
+                numberOfTapes = std::stoi(tokens[0]);
+                if (numberOfTapes < 1) {
+                    throw MTException("El número de cintas debe ser al menos 1");
+                }
+                tm->setNumberOfTapes(numberOfTapes);
+            } catch (const std::invalid_argument&) {
+                // No es un número, es una transición
+                // Retroceder y parsear como transición
+                numberOfTapes = 1;
+                tm->setNumberOfTapes(1);
+                
+                // Parsear esta línea como transición
+                if (numberOfTapes == 1 && tokens.size() == 5) {
+                    // Transición monocinta
+                    State currentState(tokens[0]);
+                    std::string readSymbol = tokens[1];
+                    State nextState(tokens[2]);
+                    std::string writeSymbol = tokens[3];
+                    char direction = tokens[4][0];
+
+                    Transition trans(currentState, readSymbol, nextState, writeSymbol, direction);
+                    tm->addTransition(trans);
+                }
+            }
+        }
+    }
+
+    // Líneas 8+: Transiciones
     while (getNextValidLine(line)) {
         auto tokens = tokenize(line);
-        if (tokens.size() == 5) {
-            // Formato: estado_actual símbolo_leído estado_siguiente símbolo_escrito dirección
-            State currentState(tokens[0]);
-            std::string readSymbol = tokens[1];
-            State nextState(tokens[2]);
-            std::string writeSymbol = tokens[3];
-            char direction = tokens[4][0];
+        
+        if (numberOfTapes == 1) {
+            // Transición monocinta: estado_actual símbolo_leído estado_siguiente símbolo_escrito dirección
+            if (tokens.size() == 5) {
+                State currentState(tokens[0]);
+                std::string readSymbol = tokens[1];
+                State nextState(tokens[2]);
+                std::string writeSymbol = tokens[3];
+                
+                std::string dirStr = tokens[4];
+                if (dirStr.length() != 1 || (dirStr[0] != 'L' && dirStr[0] != 'R' && dirStr[0] != 'S')) {
+                    throw MTException("Dirección inválida en línea " + std::to_string(lineNumber) + 
+                                    ": '" + dirStr + "' (debe ser L, R o S)");
+                }
+                char direction = dirStr[0];
 
-            Transition trans(currentState, readSymbol, nextState, writeSymbol, direction);
-            tm->addTransition(trans);
+                Transition trans(currentState, readSymbol, nextState, writeSymbol, direction);
+                tm->addTransition(trans);
+            } else {
+                throw MTException("Línea " + std::to_string(lineNumber) + " tiene formato incorrecto: " + line);
+            }
         } else {
-            throw MTException("Línea " + std::to_string(lineNumber) + " tiene formato incorrecto: " + line);
+            // Transición multicinta: estado_actual s1 s2 ... sk estado_siguiente w1 w2 ... wk d1 d2 ... dk
+            int expectedTokens = 2 + 3 * numberOfTapes;
+            if (tokens.size() != static_cast<size_t>(expectedTokens)) {
+                throw MTException("Línea " + std::to_string(lineNumber) + 
+                                " tiene formato incorrecto para " + std::to_string(numberOfTapes) + 
+                                " cintas. Se esperaban " + std::to_string(expectedTokens) + 
+                                " tokens, pero se encontraron " + std::to_string(tokens.size()));
+            }
+            
+            State currentState(tokens[0]);
+            
+            std::vector<std::string> readSymbols;
+            for (int i = 0; i < numberOfTapes; i++) {
+                readSymbols.push_back(tokens[1 + i]);
+            }
+            
+            State nextState(tokens[1 + numberOfTapes]);
+            
+            std::vector<std::string> writeSymbols;
+            for (int i = 0; i < numberOfTapes; i++) {
+                writeSymbols.push_back(tokens[2 + numberOfTapes + i]);
+            }
+            
+            std::vector<char> directions;
+            for (int i = 0; i < numberOfTapes; i++) {
+                std::string dirStr = tokens[2 + 2 * numberOfTapes + i];
+                if (dirStr.length() != 1 || (dirStr[0] != 'L' && dirStr[0] != 'R' && dirStr[0] != 'S')) {
+                    throw MTException("Dirección inválida en línea " + std::to_string(lineNumber) + 
+                                    ": '" + dirStr + "' (debe ser L, R o S)");
+                }
+                directions.push_back(dirStr[0]);
+            }
+            
+            Transition trans(currentState, readSymbols, nextState, writeSymbols, directions);
+            tm->addTransition(trans);
         }
     }
 
@@ -247,9 +326,9 @@ void MTParser::validateMachine(const TuringMachine* tm) {
 
         // Verificar que la dirección es válida
         char dir = trans.getDirection();
-        if (dir != 'L' && dir != 'R') {
+        if (dir != 'L' && dir != 'R' && dir != 'S') {
             throw MTException("Dirección '" + std::string(1, dir) + 
-                             "' en transición no es válida (debe ser L o R)");
+                             "' en transición no es válida (debe ser L, R o S)");
         }
     }
 }

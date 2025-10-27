@@ -1,0 +1,33 @@
+# Máquina de Turing de 2 cintas que copia la entrada de cinta 1 a cinta 2
+# MT que copia: w -> w|w (entrada | salida en cinta 2)
+# Alfabeto: {0, 1}
+
+# Estados: q0 (inicial, copia), q2 (aceptación)
+q0 q2
+
+# Alfabeto de entrada
+0 1
+
+# Alfabeto de cinta (incluye blanco)
+0 1 .
+
+# Estado inicial
+q0
+
+# Símbolo blanco
+.
+
+# Estados de aceptación
+q2
+
+# Número de cintas
+2
+
+# Transiciones multicinta
+# Formato: estado_actual s1 s2 estado_siguiente w1 w2 d1 d2
+# donde si = símbolo leído de cinta i, wi = escrito en cinta i, di = dirección (L/R)
+
+# Fase 1: Copiar símbolos de cinta 1 a cinta 2
+q0 0 . q0 0 0 R R
+q0 1 . q0 1 1 R R
+q0 . . q2 . . R R

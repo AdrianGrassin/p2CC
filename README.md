@@ -9,18 +9,22 @@
 ## 📋 Descripción
 
 Simulador de Máquinas de Turing implementado en C++17 que permite:
+
 - ✅ Cargar especificaciones de MT desde archivos de texto
+- ✅ Soporte para máquinas monocinta y multicinta
 - ✅ Validación automática de la definición formal
 - ✅ Ejecución paso a paso con visualización de la traza
 - ✅ Detección de errores en tiempo de carga
-
-Implementa la definición formal: **M = (Q, Σ, Γ, δ, q₀, F)**
+- ✅ Ejercicios propuestos implementados
+Implementa la definición formal: **M = (Q, Σ, Γ, δ, q₀, F)** para monocinta y **M = (Q, Σ, Γ, δ, q₀, F, k)** para multicinta.
 
 ---
 
-## 🚀 Compilación y Ejecución
+## Compilación y Ejecución
 
 ### Compilación
+
+Para compilar el proyecto se puede utilizar CMake, aunque también es posible compilar con los scripts compile.sh para Linux/Mac o compile.bat para Windows.
 
 ```bash
 mkdir build
@@ -31,37 +35,95 @@ make
 
 El ejecutable se genera en `build/mtsimulator`.
 
-**Alternativa sin CMake:**
-```bash
-g++ -std=c++17 -I./include -o build/mtsimulator src/*.cpp
-```
-
-> **Nota:** En Windows usar `compile.bat` o MinGW/MSYS2.
-
 ### Uso
+
+El simulador detecta automáticamente si la MT es monocinta o multicinta.
 
 ```bash
 # Modo resumido (solo muestra estado inicial y final)
-./build/mtsimulator <archivo_MT> <entrada>
+.\build\TuringMachineSimulator.exe <archivo_MT> <entrada>
 
 # Modo detallado (muestra todos los pasos)
-./build/mtsimulator <archivo_MT> <entrada> -h
+.\build\TuringMachineSimulator.exe <archivo_MT> <entrada> -t
 ```
 
 **Ejemplos:**
+
 ```bash
-./build/mtsimulator data/Ejemplo_MT.txt "0011"
-./build/mtsimulator data/Ejemplo2_MT.txt "11" -h
+# Windows
+.\build\TuringMachineSimulator.exe data\Ejemplo_MT.txt "0011"
+.\build\TuringMachineSimulator.exe data\Ejemplo2_MT.txt "11" -t
+
+# Linux/Mac
+./build/TuringMachineSimulator data/Ejemplo_MT.txt "0011"
+./build/TuringMachineSimulator data/Ejemplo2_MT.txt "11" -t
 ```
 
+### Flags Disponibles
+
+- **-t**: Muestra la traza completa de ejecución (todos los pasos intermedios)
+
 ---
+
+## 🎯 Ejercicios Propuestos Implementados
+
+### 1. Contador de a^n b^m (Multicinta)
+
+**Archivo:** `data/MTproposed/mt_abcontador.txt`
+
+Máquina de Turing de 2 cintas que cuenta el número de 'a's y 'b's en una cadena y genera como salida `1^(n+1).1^(m+1)` donde n es el número de 'a's y m el número de 'b's.
+
+**Ejemplo de uso:**
+
+```bash
+.\build\TuringMachineSimulator data\MTproposed\mt_abcontador.txt "abbabaabb" 
+Ejecutando con entrada: "abbabaabb"
+
+=== Traza de Ejecución ===
+Paso 0 (inicial): Estado: q0
+Cinta 1: [abbabaabb], Cabezal: 0
+Cinta 2: [], Cabezal: 0
+Paso 49 (final): Estado: qacc
+Cinta 1: [11111.111111], Cabezal: 13
+Cinta 2: [11111.111111], Cabezal: 13
+
+=== Resultado ===
+Pasos totales: 49
+Resultado: ACEPTA
+Cintas finales:
+  Cinta 1: [11111.111111]
+  Cinta 2: [11111.111111]
+Estado final: qacc
+=================================================
+```
+
+### 2. Reconocedor L = {a^n b^m | m > n, n > 0}
+
+**Archivo:** `data/MTproposed/mt_an_bm.txt`
+
+Máquina de Turing que acepta cadenas donde:
+
+- Debe haber al menos una 'a' (n > 0)
+- El número de 'b's debe ser estrictamente mayor que el de 'a's (m > n)
+
+**Ejemplos:**
+```bash
+# Cadenas aceptadas
+.\build\TuringMachineSimulator data\MTproposed\mt_an_bm.txt "abb"        # n=1, m=2 ✓
+.\build\TuringMachineSimulator data\MTproposed\mt_an_bm.txt "aabbb"  # n=2, m=3 ✓
+
+# Cadenas rechazadas
+.\build\TuringMachineSimulator data\MTproposed\mt_an_bm.txt "bb"     # n=0 ✗
+.\build\TuringMachineSimulator data\MTproposed\mt_an_bm.txt "ab"     # m=n ✗
+.\build\TuringMachineSimulator data\MTproposed\mt_an_bm.txt "aaab"   # m<n ✗
+```
 
 ### Reglas del Formato
 
 - Los elementos se separan por espacios
 - Las líneas con `#` son comentarios
-- Dirección: `L` (izquierda) o `R` (derecha)
 - Las 6 líneas de cabecera deben estar en orden
+- Antes de la sección de transiciones, se puede incluir el número de cintas para máquinas multicinta, si no se asume monocinta por defecto.
 
 ---
 
@@ -71,12 +133,12 @@ g++ -std=c++17 -I./include -o build/mtsimulator src/*.cpp
 
 ```
 p2CC/
-├── include/          # Archivos de cabecera (.h)
+├── include/         # Archivos de cabecera (.h)
 ├── src/             # Implementaciones (.cpp)
 ├── data/            # Ejemplos de MT
 │   ├── Ejemplo_MT.txt
 │   ├── Ejemplo2_MT.txt
-│   └── invalid/     # Casos de prueba inválidos
+│   └── multitape/   # Ejemplos multicinta
 ├── build/           # Archivos compilados
 └── CMakeLists.txt   # Configuración CMake
 ```
@@ -84,21 +146,25 @@ p2CC/
 ### Componentes Principales
 
 **TuringMachine**: Clase principal que implementa M = (Q, Σ, Γ, δ, q₀, F)
+
 - Gestión de estados, alfabetos y transiciones
 - Ejecución paso a paso
 - Verificación de aceptación
 
 **Tape**: Cinta infinita implementada con `std::deque`
+
 - Expansión dinámica O(1) en ambas direcciones
 - Operaciones de lectura/escritura
 - Movimiento del cabezal (L/R)
 
 **MTParser**: Análisis y validación de archivos
+
 - Validación de definición formal
 - Detección de errores en especificación
 - Lanza excepciones descriptivas
 
 **MTSimulator**: Control de ejecución y visualización
+
 - Registro de traza completa
 - Modos de visualización (resumido/detallado)
 - Estadísticas de ejecución
@@ -108,122 +174,23 @@ p2CC/
 ## ⚙️ Decisiones de Implementación
 
 **Variante de MT implementada:**
+
 - Escritura y movimiento simultáneos: δ(q, a) = (q', b, D)
-- Movimientos: L (izquierda) y R (derecha)
+- Movimientos: L (izquierda), R (derecha) y S (sin movimiento)
 - Cinta infinita en ambas direcciones
 - Máquina determinista
 
 **Características:**
+
 - Soporte para múltiples estados de aceptación (F ⊆ Q)
 - Validación exhaustiva de la especificación antes de ejecutar
 - Límite de 10,000 pasos para evitar bucles infinitos (puede ajustarse)
-- Modo de visualización resumido o detallado con `-h`
-
----
-
-## 💡 Ejemplos de Uso
-
-### Ejemplo 1: Reconocimiento de {0ⁿ1ⁿ | n ≥ 0}
-
-```bash
-./build/mtsimulator data/Ejemplo_MT.txt "0011"
-```
-
-**Salida (modo resumido):**
-```
-=== Traza de Ejecución ===
-Paso 0 (inicial): Estado: q0, Cinta: [0011], Cabezal: 0
-Paso 4 (final): Estado: q0, Cinta: [0011], Cabezal: 4
-
-=== Resultado ===
-Resultado: RECHAZA
-```
-
-Con `-h` se muestran todos los pasos intermedios.
-
----
-
-### Ejemplo 2: Duplicación en unario
-
-```bash
-./build/mtsimulator data/Ejemplo2_MT.txt "11"
-```
-
-**Salida:**
-```
-=== Traza de Ejecución ===
-Paso 0 (inicial): Estado: q0, Cinta: [11], Cabezal: 0
-Paso 16 (final): Estado: q5, Cinta: [1111], Cabezal: 1
-
-=== Resultado ===
-Resultado: ACEPTA
-Cinta final: [1111]
-```
-
-La entrada `11` (2 en unario) se duplica a `1111` (4 en unario).
-
----
-
-## ⚠️ Validación de Errores
-
-El parser detecta automáticamente errores en las especificaciones antes de la ejecución:
-
-### Ejemplos de Errores Detectados
-
-#### ❌ Estado inicial no definido:
-```text
-q1 q2      # Q = {q1, q2}
-0 1
-0 1 .
-q99        # Error: q99 ∉ Q
-```
-```
-Error de validación: El estado inicial 'q99' no está en el conjunto de estados Q
-```
-
-#### ❌ Símbolo blanco en alfabeto de entrada:
-```text
-q0 q1
-0 1 .      # Error: . está en Σ
-0 1 .
-q0
-.
-q1
-```
-```
-Error de validación: El símbolo blanco '.' no puede estar en el alfabeto de entrada Σ
-```
-
-#### ❌ Símbolo no definido en transición:
-```text
-q0 q1
-0 1        # Σ = {0, 1}
-0 1 .      # Γ = {0, 1, .}
-q0
-.
-q1
-q0 0 q1 X R   # Error: X ∉ Γ
-```
-```
-Error de validación: Símbolo escrito 'X' en transición no está en Γ
-```
-
-#### ❌ Estado de aceptación inválido:
-```text
-q0 q1      # Q = {q0, q1}
-0 1
-0 1 .
-q0
-.
-q99        # Error: q99 ∉ Q
-```
-```
-Error de validación: Estado de aceptación 'q99' no está en Q
-```
+- Modo de visualización resumido o detallado con `-t`
 
 ### Validaciones Realizadas
 
 El sistema verifica automáticamente:
+
 - ✅ q₀ ∈ Q (estado inicial está en Q)
 - ✅ F ⊆ Q (todos los estados de aceptación están en Q)
 - ✅ Σ ⊆ Γ (alfabeto de entrada es subconjunto del alfabeto de cinta)
@@ -234,23 +201,6 @@ El sistema verifica automáticamente:
   - D ∈ {L, R}
 
 **Archivos de prueba:** Los archivos en `data/invalid/` contienen ejemplos de MTs inválidas para probar el sistema de validación.
-
----
-
-## 🧪 Casos de Prueba
-
-**Válidos:**
-
-- `data/Ejemplo_MT.txt` - Reconocedor de patrones
-- `data/Ejemplo2_MT.txt` - Duplicador en unario
-
-**Inválidos (para validación):**
-
-- `data/invalid/Test_BlankInSigma.txt`
-- `data/invalid/Test_InvalidAcceptState.txt`
-- `data/invalid/Test_InvalidSymbol.txt`
-
----
 
 ## 📄 Licencia
 
