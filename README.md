@@ -40,10 +40,10 @@ El simulador detecta automáticamente si la MT es monocinta o multicinta.
 
 ```bash
 # Modo resumido (solo muestra estado inicial y final)
-.\build\TuringMachineSimulator.exe <archivo_MT> <entrada>
+.\build\TuringMachineSimulator <archivo_MT> <entrada>
 
 # Modo detallado (muestra todos los pasos)
-.\build\TuringMachineSimulator.exe <archivo_MT> <entrada> -t
+.\build\TuringMachineSimulator <archivo_MT> <entrada> -t
 ```
 
 **Ejemplos:**
