@@ -5,7 +5,7 @@
  * Constructor de TuringMachine
  */
 TuringMachine::TuringMachine()
-    : initialState(State()), currentState(State()), numberOfTapes(1),
+    : initialState(State()), numberOfTapes(1), currentState(State()),
       stepCount(0), isAccepted(false), hasHalted(false) {
     tapes.resize(1, nullptr);
 }

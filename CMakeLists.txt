@@ -5,6 +5,11 @@ project(MTSimulator)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Configurar el directorio de salida para el ejecutable
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/build)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/build)
+
 # Archivos fuente
 set(SOURCES
     src/main.cpp
@@ -18,17 +23,17 @@ set(SOURCES
 )
 
 # Crear el ejecutable
-add_executable(mtsimulator ${SOURCES})
+add_executable(TuringMachineSimulator ${SOURCES})
 
 # Directorios de inclusión
-target_include_directories(mtsimulator PRIVATE 
+target_include_directories(TuringMachineSimulator PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Opciones de compilación
 if(MSVC)
-    target_compile_options(mtsimulator PRIVATE /W4)
+    target_compile_options(TuringMachineSimulator PRIVATE /W4)
 else()
-    target_compile_options(mtsimulator PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(TuringMachineSimulator PRIVATE -Wall -Wextra -Wpedantic)
 endif()

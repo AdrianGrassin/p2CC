@@ -32,7 +32,7 @@ cmake ..
 make
 ```
 
-El ejecutable se genera en `build/mtsimulator`.
+El ejecutable se genera en `build/TuringMachineSimulator`.
 
 ### Uso
 
